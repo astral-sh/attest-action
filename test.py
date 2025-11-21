@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 import requests
+from pypi_attestations import Attestation, GitHubPublisher
 from sigstore import oidc
 
 import action
@@ -169,3 +170,38 @@ def test_attest_overwrite_succeeds(
         id_token,
         overwrite=True,
     )
+
+
+def test_attest_verify(
+    sampleproject: Path,
+    id_token: oidc.IdentityToken,
+) -> None:
+    subprocess.run(["uv", "build"], cwd=sampleproject, check=True)
+    dist_dir = sampleproject / "dist"
+
+    patterns = {str(dist_dir / "*")}
+
+    dists = action._collect_dists(patterns)
+    assert len(dists) == 2  # sdist and wheel
+
+    action._attest(
+        dists,
+        id_token,
+        overwrite=False,
+    )
+
+    for dist_path, dist in dists:
+        attestation_path = dist_path.with_name(f"{dist_path.name}.publish.attestation")
+        assert attestation_path.exists()
+
+        attestation = Attestation.model_validate_json(attestation_path.read_bytes())
+        identity = GitHubPublisher(
+            repository="sigstore-conformance/extremely-dangerous-public-oidc-beacon",
+            workflow="extremely-dangerous-oidc-beacon.yml",
+        )
+
+        attestation.verify(
+            identity=identity,
+            dist=dist,
+            offline=True,
+        )
