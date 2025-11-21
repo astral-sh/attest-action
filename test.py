@@ -86,3 +86,55 @@ def test_attest(sampleproject: Path, id_token: oidc.IdentityToken) -> None:
     for dist_path, _ in dists:
         attestation_path = dist_path.with_name(f"{dist_path.name}.publish.attestation")
         assert attestation_path.exists()
+
+
+def test_attest_overwrite_fails(
+    sampleproject: Path,
+    id_token: oidc.IdentityToken,
+) -> None:
+    subprocess.run(["uv", "build"], cwd=sampleproject, check=True)
+    dist_dir = sampleproject / "dist"
+
+    patterns = {str(dist_dir / "*")}
+
+    dists = action._collect_dists(patterns)
+    assert len(dists) == 2  # sdist and wheel
+
+    action._attest(
+        dists,
+        id_token,
+        overwrite=False,
+    )
+
+    with pytest.raises(RuntimeError, match="Attestation file already exists"):
+        action._attest(
+            dists,
+            id_token,
+            overwrite=False,
+        )
+
+
+def test_attest_overwrite_succeeds(
+    sampleproject: Path,
+    id_token: oidc.IdentityToken,
+) -> None:
+    subprocess.run(["uv", "build"], cwd=sampleproject, check=True)
+    dist_dir = sampleproject / "dist"
+
+    patterns = {str(dist_dir / "*")}
+
+    dists = action._collect_dists(patterns)
+    assert len(dists) == 2  # sdist and wheel
+
+    action._attest(
+        dists,
+        id_token,
+        overwrite=False,
+    )
+
+    # This should succeed without error.
+    action._attest(
+        dists,
+        id_token,
+        overwrite=True,
+    )
