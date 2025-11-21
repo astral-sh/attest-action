@@ -1,0 +1,28 @@
+name: astral-sh/attest-action
+
+description: A GitHub Action that generates PEP 740 publish attestations for your Python packages.
+
+inputs:
+  paths:
+    description: One or more whitespace-separated directories or glob patterns to search for Python distributions to generate attestations for.
+    required: false
+    default: dist/*
+  overwrite:
+    description: Whether to overwrite existing attestations if they already exist.
+    required: false
+    default: "false"
+
+outputs: {}
+
+runs:
+  using: composite
+  steps:
+    - name: setup uv
+      uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
+
+    - name: generate attestations
+      run: |
+        uv run --script --locked "${GITHUB_ACTION_PATH}/action.py"
+      shell: bash
+      env:
+        ATTEST_ACTION_INPUT_PATHS: ${{ inputs.paths }}
