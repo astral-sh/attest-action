@@ -1,4 +1,6 @@
+import logging
 import subprocess
+import time
 import uuid
 from pathlib import Path
 
@@ -8,16 +10,46 @@ from sigstore import oidc
 
 import action
 
+logger = logging.getLogger(__name__)
+
 
 @pytest.fixture(scope="session")
 def id_token() -> oidc.IdentityToken:
-    resp = requests.get(
-        "https://raw.githubusercontent.com/sigstore-conformance/extremely-dangerous-public-oidc-beacon/refs/heads/current-token/oidc-token.txt",
-        params={"cachebuster": uuid.uuid4().hex},
-    )
-    resp.raise_for_status()
-    id_token = resp.text.strip()
-    return oidc.IdentityToken(id_token)
+    def _id_token() -> oidc.IdentityToken | None:
+        # GitHub loves to cache things it has no business caching.
+        result = subprocess.run(
+            [
+                "git",
+                "ls-remote",
+                "https://github.com/sigstore-conformance/extremely-dangerous-public-oidc-beacon",
+                "refs/heads/current-token",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        ref = result.stdout.split()[0]
+
+        resp = requests.get(
+            f"https://raw.githubusercontent.com/sigstore-conformance/extremely-dangerous-public-oidc-beacon/{ref}/oidc-token.txt",
+        )
+        resp.raise_for_status()
+        id_token = resp.text.strip()
+        try:
+            return oidc.IdentityToken(id_token)
+        except Exception:
+            return None
+
+    # Try up to 10 times to get a valid token, waiting 3 seconds between attempts.
+    for n in range(10):
+        token = _id_token()
+        if token is not None:
+            return token
+        else:
+            logger.warning(f"Waiting for valid OIDC identity token, try {n}...")
+        time.sleep(3)
+
+    raise RuntimeError("Failed to obtain OIDC identity token for tests")
 
 
 @pytest.fixture
