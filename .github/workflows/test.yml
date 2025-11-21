@@ -13,15 +13,10 @@ concurrency:
 
 permissions: {}
 
-env:
-  STAGING_PYX_UPLOAD_URL: https://astral-sh-staging-api.pyx.dev/v1/upload/pyx-auth-action/main
-  PYX_API_URL: https://astral-sh-staging-api.pyx.dev
-
 jobs:
   id-token:
     name: "Obtain cursed OIDC token"
     runs-on: ubuntu-latest
-    permissions: {}
     outputs:
       id-token: ${{ steps.beacon.outputs.id-token }}
 
@@ -34,12 +29,44 @@ jobs:
         run: |
           echo "id-token=$(cat ./oidc-token.txt)" >> ${GITHUB_OUTPUT}
 
+  attest-basic:
+    name: "Selftest: basic attestation generation"
+    needs: [id-token]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Get pypa/sampleproject
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          repository: pypa/sampleproject
+          path: sampleproject
+          persist-credentials: false
+
+      - name: setup uv
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
+
+      - name: Build sampleproject distributions
+        working-directory: sampleproject
+        run: uv build
+
+      - name: Run attest-action
+        uses: ./
+        with:
+          paths: sampleproject/dist/
+
   all-tests-pass:
     name: "Ensure all selftests pass"
     if: always()
 
     needs:
-      - id-token
+      - attest-basic
 
     runs-on: ubuntu-latest
 
