@@ -10,6 +10,7 @@ import base64
 import logging
 import os
 import shlex
+from glob import glob
 from pathlib import Path
 
 from pypi_attestations import Attestation, Distribution
@@ -28,7 +29,7 @@ def _get_input(name: str) -> str | None:
     return os.getenv(env)
 
 
-def _get_path_patterns() -> list[str]:
+def _get_path_patterns() -> set[str]:
     """
     Retrieve and normalize the 'paths' input.
 
@@ -45,28 +46,29 @@ def _get_path_patterns() -> list[str]:
         raise RuntimeError("No paths provided in 'paths' input")
 
     # Normalize `foo/` to `foo/*`
-    paths = [str(Path(p) / "*") if Path(p).is_dir() else p for p in paths]
+    paths = [str(Path(p) / "*") if p.endswith(("/", "\\")) else p for p in paths]
 
-    return paths
+    return set(paths)
 
 
-def _unroll_files(patterns: list[str]) -> list[Path]:
+def _unroll_files(patterns: set[str]) -> set[Path]:
     """
     Given one or more path patterns (which may include glob patterns), unroll and
     return all matching files.
     """
 
-    files = []
+    files = set()
 
     for pattern in patterns:
-        for path in Path().glob(pattern):
+        for path in glob(pattern):
+            path = Path(path)
             if path.is_file():
-                files.append(path)
+                files.add(path)
 
     return files
 
 
-def _collect_dists(patterns: list[str]) -> list[tuple[Path, Distribution]]:
+def _collect_dists(patterns: set[str]) -> list[tuple[Path, Distribution]]:
     """
     Given one or more path patterns (which may include glob patterns), collect and
     return all Python distributions found at those paths.

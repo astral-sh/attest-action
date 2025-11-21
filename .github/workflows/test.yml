@@ -14,27 +14,7 @@ concurrency:
 permissions: {}
 
 jobs:
-  id-token:
-    name: "Obtain cursed OIDC token"
-    runs-on: ubuntu-latest
-    outputs:
-      id-token: ${{ steps.beacon.outputs.id-token }}
-
-    steps:
-      - name: Obtain cursed OIDC token
-        uses: sigstore-conformance/extremely-dangerous-public-oidc-beacon@4a8befcc16064dac9e97f210948d226e5c869bdc # v1.0.0
-
-      - name: Set output
-        id: beacon
-        # Note: base64 encode the token to avoid GitHub's ridiculous output value
-        # filtering behavior.
-        run: |
-          token=$(base64 < ./oidc-token.txt)
-          echo "id-token=${token}" >> ${GITHUB_OUTPUT}
-
-  attest-basic:
-    name: "Selftest: basic attestation generation"
-    needs: [id-token]
+  test:
     runs-on: ubuntu-latest
 
     permissions:
@@ -45,37 +25,4 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Get pypa/sampleproject
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          repository: pypa/sampleproject
-          path: sampleproject
-          persist-credentials: false
-
-      - name: setup uv
-        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
-
-      - name: Build sampleproject distributions
-        working-directory: sampleproject
-        run: uv build
-
-      - name: Run attest-action
-        uses: ./
-        with:
-          paths: sampleproject/dist/
-          id-token: ${{ needs.id-token.outputs.id-token }}
-
-  all-tests-pass:
-    name: "Ensure all selftests pass"
-    if: always()
-
-    needs:
-      - attest-basic
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Ensure all selftests passed
-        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
-        with:
-          jobs: ${{ toJSON(needs) }}
+      - run: make test

@@ -11,3 +11,7 @@ lint:
 fix:
 	uvx ruff format
 	uvx ruff check --fix
+
+.PHONY: test
+test:
+	uvx --with=requests --with-requirements=action.py pytest test.py
