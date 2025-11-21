@@ -29,7 +29,8 @@ jobs:
         # Note: base64 encode the token to avoid GitHub's ridiculous output value
         # filtering behavior.
         run: |
-          echo "id-token=$(base64 < ./oidc-token.txt)" >> ${GITHUB_OUTPUT}
+          token=$(base64 < ./oidc-token.txt)
+          echo "id-token=${token}" >> ${GITHUB_OUTPUT}
 
   attest-basic:
     name: "Selftest: basic attestation generation"
