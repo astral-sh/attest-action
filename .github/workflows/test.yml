@@ -1,0 +1,50 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+env:
+  STAGING_PYX_UPLOAD_URL: https://astral-sh-staging-api.pyx.dev/v1/upload/pyx-auth-action/main
+  PYX_API_URL: https://astral-sh-staging-api.pyx.dev
+
+jobs:
+  id-token:
+    name: "Obtain cursed OIDC token"
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      id-token: ${{ steps.beacon.outputs.id-token }}
+
+    steps:
+      - name: Obtain cursed OIDC token
+        uses: sigstore-conformance/extremely-dangerous-public-oidc-beacon@4a8befcc16064dac9e97f210948d226e5c869bdc # v1.0.0
+
+      - name: Set output
+        id: beacon
+        run: |
+          echo "id-token=$(cat ./oidc-token.txt)" >> ${GITHUB_OUTPUT}
+
+  all-tests-pass:
+    name: "Ensure all selftests pass"
+    if: always()
+
+    needs:
+      - id-token
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ensure all selftests passed
+        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
+        with:
+          jobs: ${{ toJSON(needs) }}

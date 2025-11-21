@@ -23,7 +23,7 @@ def _get_input(name: str) -> str | None:
     """
     Get an action input from the environment, or `None` if not set.
     """
-    env = f"ATTEST_ACTION_INPUT_{name.upper()}"
+    env = f"ATTEST_ACTION_INPUT_{name.upper().replace('-', '_')}"
     return os.getenv(env)
 
 
@@ -146,7 +146,11 @@ def main() -> None:
 
     dists = _collect_dists(path_patterns)
 
-    id_token = _get_id_token()
+    if id_token := _get_input("id-token"):
+        id_token = oidc.IdentityToken(raw_token=id_token)
+    else:
+        id_token = _get_id_token()
+
     overwrite = _get_input("overwrite") == "true"
 
     _attest(dists, id_token, overwrite=overwrite)
