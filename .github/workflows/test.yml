@@ -26,8 +26,10 @@ jobs:
 
       - name: Set output
         id: beacon
+        # Note: base64 encode the token to avoid GitHub's ridiculous output value
+        # filtering behavior.
         run: |
-          echo "id-token=$(cat ./oidc-token.txt)" >> ${GITHUB_OUTPUT}
+          echo "id-token=$(base64 < ./oidc-token.txt)" >> ${GITHUB_OUTPUT}
 
   attest-basic:
     name: "Selftest: basic attestation generation"
