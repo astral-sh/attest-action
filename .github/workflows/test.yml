@@ -60,6 +60,7 @@ jobs:
         uses: ./
         with:
           paths: sampleproject/dist/
+          id-token: ${{ needs.id-token.outputs.id-token }}
 
   all-tests-pass:
     name: "Ensure all selftests pass"
