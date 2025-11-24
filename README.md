@@ -121,3 +121,5 @@ been overwritten will instead cause the action to fail.
 If `true`, existing attestations will be overwritten.
 
 ## Outputs
+
+This action currently has no outputs.

@@ -5,12 +5,25 @@ import shlex
 from glob import glob
 from pathlib import Path
 
+from prettytable import PrettyTable, TableStyle
 from pypi_attestations import Attestation, Distribution
 from sigstore import oidc
 from sigstore.models import ClientTrustConfig
 from sigstore.sign import SigningContext
 
 logger = logging.getLogger(__name__)
+
+
+def _summary(msg: str) -> None:
+    """
+    Write a message to the GitHub Actions job summary, if available.
+    """
+
+    if not (step_summary := os.getenv("GITHUB_STEP_SUMMARY")):
+        return
+
+    with Path(step_summary).open("a") as io:
+        print(msg, file=io)
 
 
 def _get_input(name: str) -> str | None:
@@ -104,7 +117,7 @@ def _attest(
     dists: list[tuple[Path, Distribution]],
     id_token: oidc.IdentityToken,
     overwrite: bool = False,
-) -> None:
+) -> list[tuple[Distribution, Attestation]]:
     """
     Generate and write PEP 740 publish attestations for the given distributions.
 
@@ -130,10 +143,14 @@ def _attest(
     trust = ClientTrustConfig.production()
     context = SigningContext.from_trust_config(trust)
 
+    attestations = []
     with context.signer(identity_token=id_token) as signer:
         for _, dist, attestation_path in dists_with_dests:
             attestation = Attestation.sign(signer, dist)
             attestation_path.write_text(attestation.model_dump_json())
+            attestations.append(((dist, attestation)))
+
+    return attestations
 
 
 def main() -> None:
@@ -149,7 +166,21 @@ def main() -> None:
 
     overwrite = _get_input("overwrite") == "true"
 
-    _attest(dists, id_token, overwrite=overwrite)
+    attestations = _attest(dists, id_token, overwrite=overwrite)
+
+    _summary("## attest-action")
+    table = PrettyTable()
+    table.set_style(TableStyle.MARKDOWN)
+    table.field_names = ["Distribution", "Attestation", "Transparency Log Entry"]
+    for dist, attestation in attestations:
+        log_entry = attestation.verification_material.transparency_entries[0]
+        log_index = log_entry["logIndex"]
+        log_index_url = f"https://search.sigstore.dev/?logIndex={log_index}"
+        log_index_link = f"[{log_index}]({log_index_url})"
+        table.add_row(
+            [f"`{dist.name}`", f"`{dist.name}.publish.attestation`", log_index_link]
+        )
+    _summary(str(table))
 
 
 if __name__ == "__main__":
