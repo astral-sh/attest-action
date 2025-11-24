@@ -4,6 +4,7 @@ version = "0.0.1"
 description = "A GitHub Action that generates [PEP 740] publish attestations for your Python packages."
 readme = "README.md"
 dependencies = [
+    "prettytable>=3.17.0",
     "pypi-attestations>=0.0.28",
     "sigstore>=4.1.0",
 ]
