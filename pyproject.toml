@@ -1,0 +1,17 @@
+[project]
+name = "attest-action"
+version = "0.0.1"
+description = "A GitHub Action that generates [PEP 740] publish attestations for your Python packages."
+readme = "README.md"
+dependencies = [
+    "pypi-attestations>=0.0.28",
+    "sigstore>=4.1.0",
+]
+requires-python = ">=3.14"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.1",
+    "ruff>=0.14.6",
+]
+

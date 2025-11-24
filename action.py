@@ -1,9 +1,5 @@
 # /// script
 # requires-python = ">=3.14"
-# dependencies = [
-#     "pypi-attestations",
-#     "sigstore",
-# ]
 # ///
 
 import base64
