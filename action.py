@@ -2,6 +2,7 @@ import base64
 import logging
 import os
 import shlex
+from datetime import datetime
 from glob import glob
 from pathlib import Path
 
@@ -171,15 +172,18 @@ def main() -> None:
     _summary("## attest-action")
     table = PrettyTable()
     table.set_style(TableStyle.MARKDOWN)
-    table.field_names = ["Distribution", "Attestation", "Transparency Log Entry"]
+    table.field_names = ["Distribution", "Transparency Log Entry", "Integration Time"]
     for dist, attestation in attestations:
         log_entry = attestation.verification_material.transparency_entries[0]
+
         log_index = log_entry["logIndex"]
         log_index_url = f"https://search.sigstore.dev/?logIndex={log_index}"
         log_index_link = f"[{log_index}]({log_index_url})"
-        table.add_row(
-            [f"`{dist.name}`", f"`{dist.name}.publish.attestation`", log_index_link]
-        )
+
+        integrated_time = int(log_entry["integratedTime"])
+        integrated_time_str = datetime.fromtimestamp(integrated_time).isoformat()
+
+        table.add_row([f"`{dist.name}`", log_index_link, integrated_time_str])
     _summary(str(table))
 
 
