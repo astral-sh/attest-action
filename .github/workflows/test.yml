@@ -68,3 +68,7 @@ jobs:
         uses: ./
         with:
           paths: astral-attest-action-test-pypi/dist/*
+
+      - name: publish to TestPyPI
+        working-directory: astral-attest-action-test-pypi
+        run: uv publish --trusted-publishing=always
