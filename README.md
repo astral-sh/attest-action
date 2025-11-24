@@ -82,7 +82,7 @@ jobs:
 ```
 
 > [!IMPORTANT]
-> Performing builds in a separate job is **strongly recommended** as a way
+> Performing builds in a separate job is **strongly encouraged** as a way
 > to improve both security and reproducibility.
 
 If you have a custom path (or paths) to your distributions, you can specify them
