@@ -30,3 +30,20 @@ jobs:
         uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
 
       - run: make test
+
+  integration-pypi:
+    name: "Integration test: publish to PyPI with attestations"
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write # for Trusted Publishing + attest-action
+
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
+
+      - name: setup-uv
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
+
