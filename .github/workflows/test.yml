@@ -72,6 +72,13 @@ jobs:
         with:
           paths: /tmp/astral-attest-action-test-pypi/dist/*
 
+      # NOTE: This should be switched to use `uv publish` once we release
+      # a version that includes attestation uploading support.
       - name: publish to TestPyPI
-        working-directory: /tmp/astral-attest-action-test-pypi
-        run: uv publish --trusted-publishing=always --publish-url https://test.pypi.org/legacy/
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+        with:
+          packages-dir: /tmp/astral-attest-action-test-pypi/dist
+          repository-url: https://test.pypi.org/legacy/
+
+        # working-directory: /tmp/astral-attest-action-test-pypi
+        # run: uv publish --trusted-publishing=always --publish-url https://test.pypi.org/legacy/
