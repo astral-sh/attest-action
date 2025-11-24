@@ -51,24 +51,25 @@ jobs:
         uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
 
       - name: generate package
+        working-directory: /tmp
         run: |
           uv init --lib astral-attest-action-test-pypi
 
       - name: version package
-        working-directory: astral-attest-action-test-pypi
+        working-directory: /tmp/astral-attest-action-test-pypi
         run: |
           version="0.0.$(uv run python -m random -i 4294967296)"
           uv version "${version}"
 
       - name: build package
-        working-directory: astral-attest-action-test-pypi
+        working-directory: /tmp/astral-attest-action-test-pypi
         run: uv build
 
       - name: attest
         uses: ./
         with:
-          paths: astral-attest-action-test-pypi/dist/*
+          paths: /tmp/astral-attest-action-test-pypi/dist/*
 
       - name: publish to TestPyPI
-        working-directory: astral-attest-action-test-pypi
+        working-directory: /tmp/astral-attest-action-test-pypi
         run: uv publish --trusted-publishing=always
