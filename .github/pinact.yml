@@ -1,0 +1,6 @@
+version: 3
+
+files:
+  # NOTE: We only use pinact for the README; all actual action usage is
+  # updated via Dependabot.
+  - pattern: ../README.md
