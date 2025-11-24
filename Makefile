@@ -4,14 +4,14 @@ all:
 
 .PHONY: lint
 lint:
-	uvx ruff format --check
-	uvx ruff check
+	uv run --dev ruff format --check
+	uv run --dev ruff check
 
 .PHONY: fix
 fix:
-	uvx ruff format
-	uvx ruff check --fix
+	uv run --dev ruff format
+	uv run --dev ruff check --fix
 
 .PHONY: test
 test:
-	uvx --with=requests --with-requirements=action.py pytest -s -o log_cli=true -o log_cli_level=DEBUG test.py
+	uv run --dev pytest -s -o log_cli=true -o log_cli_level=DEBUG test.py
