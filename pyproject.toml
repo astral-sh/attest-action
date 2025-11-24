@@ -12,6 +12,7 @@ requires-python = ">=3.14"
 [dependency-groups]
 dev = [
     "pytest>=9.0.1",
+    "requests>=2.32.5",
     "ruff>=0.14.6",
 ]
 
