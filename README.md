@@ -68,12 +68,12 @@ jobs:
 
     needs: [build]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       # NOTE: Fetches the to-be-published distributions from a previous build job.
       # Running builds in their own job is strongly encouraged for both
       # security and reproducibility.
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           name: dist
 
