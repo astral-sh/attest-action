@@ -134,7 +134,9 @@ def _attest(
         for _, dist, attestation_path in dists_with_dests:
             attestation = Attestation.sign(signer, dist)
             attestation_path.write_text(attestation.model_dump_json())
-            print(f"✨ Generated publish attestation for {dist.name}")
+            print(
+                f"✨ Generated publish attestation for {dist.name} ({attestation_path})"
+            )
 
 
 def main() -> None:
