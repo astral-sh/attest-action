@@ -56,7 +56,9 @@ permissions:
 ### Quickstart
 
 Add `astral-sh/attest-action` directly above your publishing step in your
-publishing job. For example:
+publishing job.
+
+For example:
 
 ```yaml
 jobs:
@@ -70,9 +72,6 @@ jobs:
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
-      # NOTE: Fetches the to-be-published distributions from a previous build job.
-      # Running builds in their own job is strongly encouraged for both
-      # security and reproducibility.
       - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           name: dist
@@ -81,6 +80,10 @@ jobs:
 
       - run: uv publish
 ```
+
+> [!IMPORTANT]
+> Performing builds in a separate job is **strongly recommended** as a way
+> to improve both security and reproducibility.
 
 If you have a custom path (or paths) to your distributions, you can specify them
 via the `paths` input as whitespace-separated values.
