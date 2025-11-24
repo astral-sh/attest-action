@@ -74,4 +74,4 @@ jobs:
 
       - name: publish to TestPyPI
         working-directory: /tmp/astral-attest-action-test-pypi
-        run: uv publish --trusted-publishing=always
+        run: uv publish --trusted-publishing=always --publish-url https://test.pypi.org/legacy/
