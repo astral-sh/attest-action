@@ -59,3 +59,12 @@ jobs:
         run: |
           version="0.0.$(uv run python -m random -i 4294967296)"
           uv version "${version}"
+
+      - name: build package
+        working-directory: astral-attest-action-test-pypi
+        run: uv build
+
+      - name: attest
+        uses: ./
+        with:
+          paths: astral-attest-action-test-pypi/dist/*
