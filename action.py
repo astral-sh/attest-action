@@ -6,7 +6,6 @@ import sys
 from datetime import datetime
 from glob import glob
 from pathlib import Path
-from textwrap import dedent
 from typing import NoReturn
 
 from prettytable import PrettyTable, TableStyle
@@ -24,13 +23,10 @@ def _fatal(title: str, msg: str) -> NoReturn:
     """
 
     _summary(
-        dedent(
-            f"""
-            ### ❌ Fatal: {title}
+        f"""### ❌ Fatal: {title}
 
-            {msg}
-            """
-        )
+{msg}
+"""
     )
 
     print("::error title={}::{}".format(title, msg))
@@ -132,13 +128,10 @@ def _get_id_token() -> oidc.IdentityToken:
     try:
         id_token = oidc.detect_credential()
     except Exception as exc:
-        detail = dedent(
-            f"""
-            Could not detect an ambient OIDC credential.
+        detail = f"""Could not detect an ambient OIDC credential.
 
-            Cause: {exc}
-            """
-        )
+Cause: {exc}
+"""
         _fatal("Failed to obtain OIDC token", detail)
 
     if not id_token:
