@@ -51,23 +51,23 @@ jobs:
       - name: generate package
         working-directory: /tmp
         run: |
-          uv init --lib astral-attest-action-test-insufficient-perms
+          uv init --lib fakepkg
 
       - name: version package
-        working-directory: /tmp/astral-attest-action-test-insufficient-perms
+        working-directory: /tmp/fakepkg
         run: |
           version="0.0.$(uv run python -m random -i 4294967296)"
           uv version "${version}"
 
       - name: build package
-        working-directory: /tmp/astral-attest-action-test-insufficient-perms
+        working-directory: /tmp/fakepkg
         run: uv build
 
       - name: attest (expected to fail)
         id: attest
         uses: ./
         with:
-          paths: /tmp/astral-attest-action-test-insufficient-perms/dist/*
+          paths: /tmp/fakepkg/dist/*
         continue-on-error: true
 
       - name: assert failure
