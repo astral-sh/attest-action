@@ -138,7 +138,7 @@ def test_attest_overwrite_fails(
         overwrite=False,
     )
 
-    with pytest.raises(RuntimeError, match="Attestation file already exists"):
+    with pytest.raises(SystemExit):
         action._attest(
             dists,
             id_token,
