@@ -31,6 +31,34 @@ jobs:
 
       - run: make test
 
+  integration-invalid-paths-xfail:
+    name: "Integration test (xfail): invalid paths input"
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
+
+      - name: attest with invalid paths (expected to fail)
+        id: attest
+        uses: ./
+        with:
+          paths: ""
+        continue-on-error: true
+
+      - name: assert failure
+        run: |
+          if [ "${OUTCOME}" != "failure" ]; then
+            echo "Expected failure, got '${OUTCOME}'"
+            exit 1
+          fi
+        env:
+          OUTCOME: ${{ steps.attest.outcome }}
+
   integration-insufficient-perms-xfail:
     name: "Integration test (xfail): insufficient permissions for attestations"
     runs-on: ubuntu-latest
