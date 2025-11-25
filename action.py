@@ -17,19 +17,18 @@ from sigstore.sign import SigningContext
 logger = logging.getLogger(__name__)
 
 
-def _fatal(title: str, msg: str) -> NoReturn:
+def _fatal(title: str, *, detail: str, tip: str | None = None) -> NoReturn:
     """
     Report a fatal error to GitHub Actions and exit.
     """
 
-    _summary(
-        f"""### ❌ Fatal: {title}
+    summary_message = f"### ❌ Fatal: {title}\n\n{detail}"
+    if tip:
+        summary_message = f"{summary_message}\n\n> [!TIP]\n> {tip}"
 
-{msg}
-"""
-    )
+    _summary(summary_message)
 
-    print("::error title={}::{}".format(title, msg))
+    print("::error title={}::{}".format(title, detail))
 
     sys.exit(1)
 
@@ -128,11 +127,11 @@ def _get_id_token() -> oidc.IdentityToken:
     try:
         id_token = oidc.detect_credential()
     except Exception as exc:
-        detail = f"""Could not detect an ambient OIDC credential.
-
-Cause: {exc}
-"""
-        _fatal("Failed to obtain OIDC token", detail)
+        _fatal(
+            "Failed to obtain OIDC token",
+            detail=f"Could not detect an ambient OIDC credential.\n\nCause: {exc}",
+            tip="Ensure that your job has the `id-token: write` permission set.",
+        )
 
     if not id_token:
         raise RuntimeError("Failed to obtain OIDC identity token")
