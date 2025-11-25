@@ -2,9 +2,12 @@ import base64
 import logging
 import os
 import shlex
+import sys
 from datetime import datetime
 from glob import glob
 from pathlib import Path
+from textwrap import dedent
+from typing import NoReturn
 
 from prettytable import PrettyTable, TableStyle
 from pypi_attestations import Attestation, Distribution
@@ -13,6 +16,26 @@ from sigstore.models import ClientTrustConfig
 from sigstore.sign import SigningContext
 
 logger = logging.getLogger(__name__)
+
+
+def _fatal(title: str, msg: str) -> NoReturn:
+    """
+    Report a fatal error to GitHub Actions and exit.
+    """
+
+    _summary(
+        dedent(
+            f"""
+            ### ❌ Fatal: {title}
+
+            {msg}
+            """
+        )
+    )
+
+    print("::error title={}::{}".format(title, msg))
+
+    sys.exit(1)
 
 
 def _summary(msg: str) -> None:
@@ -106,7 +129,17 @@ def _get_id_token() -> oidc.IdentityToken:
     """
     Obtain the ambient OIDC identity token.
     """
-    id_token = oidc.detect_credential()
+    try:
+        id_token = oidc.detect_credential()
+    except Exception as exc:
+        detail = dedent(
+            f"""
+            Could not detect an ambient OIDC credential.
+
+            Cause: {exc}
+            """
+        )
+        _fatal("Failed to obtain OIDC token", detail)
 
     if not id_token:
         raise RuntimeError("Failed to obtain OIDC identity token")
