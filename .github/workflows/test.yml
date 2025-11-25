@@ -75,10 +75,5 @@ jobs:
       # NOTE: This should be switched to use `uv publish` once we release
       # a version that includes attestation uploading support.
       - name: publish to TestPyPI
-        run: |
-          uvx twine upload --repository-url https://test.pypi.org/legacy/ \
-            --attestations \
-            /tmp/astral-attest-action-test-pypi/dist/*
-
-        # working-directory: /tmp/astral-attest-action-test-pypi
-        # run: uv publish --trusted-publishing=always --publish-url https://test.pypi.org/legacy/
+        working-directory: /tmp/astral-attest-action-test-pypi
+        run: uv publish --trusted-publishing=always --publish-url https://test.pypi.org/legacy/
