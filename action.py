@@ -65,16 +65,16 @@ def _get_path_patterns() -> set[str]:
     if not raw_paths:
         _fatal(
             "No 'paths' input provided",
-            detail="The 'paths' input is required but was not provided.",
-            tip="Specify one or more paths or glob patterns in the 'paths' input.",
+            detail="The `paths` input is required but was not provided.",
+            tip="Specify one or more paths or glob patterns in the `paths` input.",
         )
 
     paths = shlex.split(raw_paths)
     if not paths:
         _fatal(
             "No paths provided in 'paths' input",
-            detail="The 'paths' input was provided but contained no valid paths.",
-            tip="Specify one or more paths or glob patterns in the 'paths' input.",
+            detail="The `paths` input was provided but contained no valid paths.",
+            tip="Specify one or more paths or glob patterns in the `paths` input.",
         )
 
     # Normalize `foo/` to `foo/*`
