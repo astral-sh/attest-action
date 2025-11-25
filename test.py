@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
-def suppress_summary_writing(monkeypatch: pytest.MonkeyPatch) -> None:
+def suppress_summary(monkeypatch: pytest.MonkeyPatch) -> None:
     """
     Prevent writing to the GitHub Actions job summary during tests.
     """
