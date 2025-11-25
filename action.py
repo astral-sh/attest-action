@@ -2,9 +2,11 @@ import base64
 import logging
 import os
 import shlex
+import sys
 from datetime import datetime
 from glob import glob
 from pathlib import Path
+from typing import NoReturn
 
 from prettytable import PrettyTable, TableStyle
 from pypi_attestations import Attestation, Distribution
@@ -13,6 +15,22 @@ from sigstore.models import ClientTrustConfig
 from sigstore.sign import SigningContext
 
 logger = logging.getLogger(__name__)
+
+
+def _fatal(title: str, *, detail: str, tip: str | None = None) -> NoReturn:
+    """
+    Report a fatal error to GitHub Actions and exit.
+    """
+
+    summary_message = f"### ❌ Fatal: {title}\n\n{detail}"
+    if tip:
+        summary_message = f"{summary_message}\n\n> [!TIP]\n> {tip}"
+
+    _summary(summary_message)
+
+    print("::error title={}::{}".format(title, detail))
+
+    sys.exit(1)
 
 
 def _summary(msg: str) -> None:
@@ -45,11 +63,19 @@ def _get_path_patterns() -> set[str]:
     """
     raw_paths = _get_input("paths")
     if not raw_paths:
-        raise RuntimeError("Internal error: no 'paths' input provided")
+        _fatal(
+            "No 'paths' input provided",
+            detail="The `paths` input is required but was not provided.",
+            tip="Specify one or more paths or glob patterns in the `paths` input.",
+        )
 
     paths = shlex.split(raw_paths)
     if not paths:
-        raise RuntimeError("No paths provided in 'paths' input")
+        _fatal(
+            "No paths provided in 'paths' input",
+            detail="The `paths` input was provided but contained no valid paths.",
+            tip="Specify one or more paths or glob patterns in the `paths` input.",
+        )
 
     # Normalize `foo/` to `foo/*`
     paths = [str(Path(p) / "*") if p.endswith(("/", "\\")) else p for p in paths]
@@ -106,10 +132,21 @@ def _get_id_token() -> oidc.IdentityToken:
     """
     Obtain the ambient OIDC identity token.
     """
-    id_token = oidc.detect_credential()
+    try:
+        id_token = oidc.detect_credential()
+    except Exception as exc:
+        _fatal(
+            "Failed to obtain OIDC token",
+            detail=f"Could not detect an ambient OIDC credential.\n\nCause: {exc}",
+            tip="Ensure that your job has the `id-token: write` permission set.",
+        )
 
     if not id_token:
-        raise RuntimeError("Failed to obtain OIDC identity token")
+        _fatal(
+            "Failed to obtain OIDC token",
+            detail="The environment does not appear to support ambient OIDC credentials.",
+            tip="This action must be run within GitHub Actions.",
+        )
 
     return oidc.IdentityToken(raw_token=id_token)
 
@@ -137,7 +174,11 @@ def _attest(
         attestation_path = parent / attestation_name
 
         if attestation_path.exists() and not overwrite:
-            raise RuntimeError(f"Attestation file already exists: {attestation_path}")
+            _fatal(
+                "Attestation file conflict",
+                detail=f"Attestation file already exists: `{attestation_path}`",
+                tip="Set `overwrite: true` to overwrite existing attestation files.",
+            )
 
         dists_with_dests.append((file, dist, attestation_path))
 

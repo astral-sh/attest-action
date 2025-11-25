@@ -31,6 +31,82 @@ jobs:
 
       - run: make test
 
+  integration-invalid-paths-xfail:
+    name: "Integration test (xfail): invalid paths input"
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
+
+      - name: attest with invalid paths (expected to fail)
+        id: attest
+        uses: ./
+        with:
+          paths: ""
+        continue-on-error: true
+
+      - name: assert failure
+        run: |
+          if [ "${OUTCOME}" != "failure" ]; then
+            echo "Expected failure, got '${OUTCOME}'"
+            exit 1
+          fi
+        env:
+          OUTCOME: ${{ steps.attest.outcome }}
+
+  integration-insufficient-perms-xfail:
+    name: "Integration test (xfail): insufficient permissions for attestations"
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
+
+      - name: setup-uv
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
+        with:
+          python-version: "3.14"
+
+      - name: generate package
+        working-directory: /tmp
+        run: |
+          uv init --lib fakepkg
+
+      - name: version package
+        working-directory: /tmp/fakepkg
+        run: |
+          version="0.0.$(uv run python -m random -i 4294967296)"
+          uv version "${version}"
+
+      - name: build package
+        working-directory: /tmp/fakepkg
+        run: uv build
+
+      - name: attest (expected to fail)
+        id: attest
+        uses: ./
+        with:
+          paths: /tmp/fakepkg/dist/*
+        continue-on-error: true
+
+      - name: assert failure
+        run: |
+          if [ "${OUTCOME}" != "failure" ]; then
+            echo "Expected failure, got '${OUTCOME}'"
+            exit 1
+          fi
+        env:
+          OUTCOME: ${{ steps.attest.outcome }}
+
   integration-testpypi:
     name: "Integration test: publish to TestPyPI with attestations"
     runs-on: ubuntu-latest
@@ -75,10 +151,21 @@ jobs:
       # NOTE: This should be switched to use `uv publish` once we release
       # a version that includes attestation uploading support.
       - name: publish to TestPyPI
-        run: |
-          uvx twine upload --repository-url https://test.pypi.org/legacy/ \
-            --attestations \
-            /tmp/astral-attest-action-test-pypi/dist/*
+        working-directory: /tmp/astral-attest-action-test-pypi
+        run: uv publish --trusted-publishing=always --publish-url https://test.pypi.org/legacy/
 
-        # working-directory: /tmp/astral-attest-action-test-pypi
-        # run: uv publish --trusted-publishing=always --publish-url https://test.pypi.org/legacy/
+  all-tests-pass:
+    name: All tests pass
+    runs-on: ubuntu-latest
+
+    needs:
+      - test
+      - integration-invalid-paths-xfail
+      - integration-insufficient-perms-xfail
+      - integration-testpypi
+
+    steps:
+      - name: All tests pass
+        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
+        with:
+          jobs: ${{ toJSON(needs) }}

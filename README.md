@@ -56,6 +56,16 @@ permissions:
   contents: read # for actions/checkout, if you're in a private repo
 ```
 
+In order to upload the resulting attestations to an index, you must use
+a publishing tool that supports PEP 740 attestations. Such tools include:
+
+* uv (`uv publish`) versions 0.9.12 and later
+* twine (`twine upload`) versions 5.1.0 and later
+
+> [!TIP]
+> We recommend using `uv publish` with this action, as it does not require
+> any additional installation or configuration.
+
 ### Quickstart
 
 Add `astral-sh/attest-action` directly above your publishing step in your

@@ -13,6 +13,14 @@ import action
 logger = logging.getLogger(__name__)
 
 
+@pytest.fixture(autouse=True)
+def suppress_summary(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    Prevent writing to the GitHub Actions job summary during tests.
+    """
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+
+
 @pytest.fixture(scope="session")
 def id_token() -> oidc.IdentityToken:
     def _id_token() -> oidc.IdentityToken | None:
@@ -138,7 +146,7 @@ def test_attest_overwrite_fails(
         overwrite=False,
     )
 
-    with pytest.raises(RuntimeError, match="Attestation file already exists"):
+    with pytest.raises(SystemExit):
         action._attest(
             dists,
             id_token,
