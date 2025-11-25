@@ -31,6 +31,54 @@ jobs:
 
       - run: make test
 
+  integration-insufficient-perms-xfail:
+    name: "Integration test (xfail): insufficient permissions for attestations"
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
+
+      - name: setup-uv
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
+        with:
+          python-version: "3.14"
+
+      - name: generate package
+        working-directory: /tmp
+        run: |
+          uv init --lib astral-attest-action-test-insufficient-perms
+
+      - name: version package
+        working-directory: /tmp/astral-attest-action-test-insufficient-perms
+        run: |
+          version="0.0.$(uv run python -m random -i 4294967296)"
+          uv version "${version}"
+
+      - name: build package
+        working-directory: /tmp/astral-attest-action-test-insufficient-perms
+        run: uv build
+
+      - name: attest (expected to fail)
+        id: attest
+        uses: ./
+        with:
+          paths: /tmp/astral-attest-action-test-insufficient-perms/dist/*
+        continue-on-error: true
+
+      - name: assert failure
+        run: |
+          if [ "${OUTCOME}" != "failure" ]; then
+            echo "Expected failure, got '${OUTCOME}'"
+            exit 1
+          fi
+        env:
+          OUTCOME: ${{ steps.attest.outcome }}
+
   integration-testpypi:
     name: "Integration test: publish to TestPyPI with attestations"
     runs-on: ubuntu-latest
