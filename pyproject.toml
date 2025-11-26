@@ -16,6 +16,7 @@ classifiers = [
 
 [dependency-groups]
 dev = [
+    "inline-snapshot>=0.31.1",
     "pyright>=1.1.407",
     "pytest>=9.0.1",
     "requests>=2.32.5",
