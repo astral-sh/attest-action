@@ -113,8 +113,8 @@ def _collect_dists(patterns: set[str]) -> list[tuple[Path, Distribution]]:
     """
 
     files = _unroll_files(patterns)
-    dists = []
 
+    dists = []
     for file in files:
         try:
             dist = Distribution.from_file(file)
@@ -161,6 +161,13 @@ def _attest(
     If `overwrite` is `False`, existing attestation files will not be overwritten
     and an error will be raised instead.
     """
+
+    if not dists:
+        _fatal(
+            "No distributions to attest",
+            detail="No valid Python distributions were collected from the specified paths.",
+            tip="Ensure that the `paths` input points to valid distribution files.",
+        )
 
     # Before setting up any signing state, precompute the paths we intend
     # to write attestations to (and fail if any already exist and overwrite
