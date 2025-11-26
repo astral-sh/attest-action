@@ -17,7 +17,7 @@ packages (to [pyx], [PyPI], or another compatible index).
 
 [PyPI]: https://pypi.org
 
-> ![WARNING]
+> [!WARNING]
 > This action is currently in an early stage of development. Releases may
 > contain significant breaking changes until it is declared stable.
 
