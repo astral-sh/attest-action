@@ -34,6 +34,7 @@ packages (to [pyx], [PyPI], or another compatible index).
   - [Quickstart](#quickstart)
 - [Inputs](#inputs)
     - [`paths`](#paths)
+    - [`overwrite`](#overwrite)
 - [Outputs](#outputs)
 
 ## Usage
