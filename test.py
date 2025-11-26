@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 import requests
+from inline_snapshot import snapshot
 from pypi_attestations import Attestation, GitHubPublisher
 from sigstore import oidc
 
@@ -14,11 +15,16 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
-def suppress_summary(monkeypatch: pytest.MonkeyPatch) -> None:
+def capture_summary(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     """
-    Prevent writing to the GitHub Actions job summary during tests.
+    Capture the GitHub Actions job summary to a temporary file.
     """
-    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+
+    summary_path = tmp_path / "GITHUB_STEP_SUMMARY"
+    summary_path.touch()
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary_path))
+
+    return summary_path
 
 
 @pytest.fixture(scope="session")
@@ -213,3 +219,24 @@ def test_attest_verify(
             dist=dist,
             offline=True,
         )
+
+
+def test_attest_no_dists(
+    id_token: oidc.IdentityToken,
+    capture_summary: Path,
+) -> None:
+    with pytest.raises(SystemExit):
+        action._attest(
+            [],
+            id_token,
+            overwrite=False,
+        )
+
+    assert capture_summary.read_text() == snapshot("""\
+### ❌ Fatal: No distributions to attest
+
+No valid Python distributions were collected from the specified paths.
+
+> [!TIP]
+> Ensure that the `paths` input points to valid distribution files.
+""")
