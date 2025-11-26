@@ -1,4 +1,3 @@
-import base64
 import logging
 import os
 import shlex
@@ -200,11 +199,7 @@ def main() -> None:
 
     dists = _collect_dists(path_patterns)
 
-    if id_token := _get_input("id-token"):
-        id_token = base64.b64decode(id_token).decode("utf-8")
-        id_token = oidc.IdentityToken(raw_token=id_token)
-    else:
-        id_token = _get_id_token()
+    id_token = _get_id_token()
 
     overwrite = _get_input("overwrite") == "true"
 
