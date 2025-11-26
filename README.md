@@ -17,6 +17,10 @@ packages (to [pyx], [PyPI], or another compatible index).
 
 [PyPI]: https://pypi.org
 
+> [!WARNING]
+> This action is currently in an early stage of development. Releases may
+> contain significant breaking changes until it is declared stable.
+
 > [!IMPORTANT]
 > This action is primarily useful for directly publishing with [`uv publish`]
 > and other upload tools that support PEP 740 attestations directly.
