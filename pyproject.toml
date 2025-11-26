@@ -8,7 +8,7 @@ dependencies = [
     "pypi-attestations>=0.0.28",
     "sigstore>=4.1.0",
 ]
-requires-python = ">=3.14"
+requires-python = ">=3.10"
 classifiers = [
     # This is a GitHub Action, not a PyPI package.
     "Private :: Do Not Upload",
