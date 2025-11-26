@@ -11,15 +11,6 @@ inputs:
     description: Whether to overwrite existing attestations if they already exist.
     required: false
     default: "false"
-  id-token:
-    description: >
-      An OIDC identity token to use for signing attestations. If not provided,
-      the ambient token will be used.
-
-      **IMPORTANT**: This input is an implementation detail. End users should
-      never need to set it.
-    required: false
-    default: ""
 
 outputs: {}
 
@@ -38,4 +29,3 @@ runs:
       env:
         ATTEST_ACTION_INPUT_PATHS: ${{ inputs.paths }}
         ATTEST_ACTION_INPUT_OVERWRITE: ${{ inputs.overwrite }}
-        ATTEST_ACTION_INPUT_ID_TOKEN: ${{ inputs.id-token }}
