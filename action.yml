@@ -21,6 +21,7 @@ runs:
       uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
       with:
         version: ">=0.9.12"
+        enable-cache: false
 
     - name: generate attestations
       run: |
