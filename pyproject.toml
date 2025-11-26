@@ -1,6 +1,6 @@
 [project]
 name = "attest-action"
-version = "0.0.2"
+version = "0.0.3"
 description = "A GitHub Action that generates [PEP 740] publish attestations for your Python packages."
 readme = "README.md"
 dependencies = [
