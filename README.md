@@ -1,6 +1,6 @@
 # attest-action
 
-[![Actions status](https://github.com/astral-sh/pyx-auth-action/actions/workflows/test.yml/badge.svg)](https://github.com/astral-sh/pyx-auth-action/actions)
+[![Actions status](https://github.com/astral-sh/attest-action/actions/workflows/test.yml/badge.svg)](https://github.com/astral-sh/attest-action/actions)
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?logo=discord&logoColor=white)](https://discord.gg/astral-sh)
 
 A GitHub Action that generates [PEP 740] publish attestations for your Python
@@ -144,7 +144,7 @@ This action currently has no outputs.
 
 ## Licence
 
-pyx-auth-action is licensed under either of
+attest-action is licensed under either of
 
 - Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
 - MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
@@ -152,7 +152,7 @@ pyx-auth-action is licensed under either of
 at your option.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in pyx-auth-action by you, as defined in the Apache-2.0 license, shall be
+for inclusion in attest-action by you, as defined in the Apache-2.0 license, shall be
 dually licensed as above, without any additional terms or conditions.
 
 <div align="center">
