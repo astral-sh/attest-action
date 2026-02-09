@@ -91,7 +91,7 @@ def _unroll_files(patterns: set[str]) -> set[Path]:
     files = set()
 
     for pattern in patterns:
-        for path in glob(pattern):
+        for path in glob(pattern, recursive=True):
             path = Path(path)
             if path.is_file():
                 files.add(path)
