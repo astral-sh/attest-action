@@ -114,6 +114,23 @@ def test_get_path_patterns(monkeypatch: pytest.MonkeyPatch) -> None:
     assert patterns == {"a", "b", "c"}
 
 
+def test_unroll_files_recursive(tmp_path: Path) -> None:
+    root = tmp_path / "dists"
+    root.mkdir()
+    (root / "top.tar.gz").touch()
+    sub = root / "nested"
+    sub.mkdir()
+    (sub / "deep.whl").touch()
+
+    # ** should match files at all depths.
+    files = action._unroll_files({str(root / "**")})
+    assert files == {root / "top.tar.gz", sub / "deep.whl"}
+
+    # * should only match files at the top level.
+    files = action._unroll_files({str(root / "*")})
+    assert files == {root / "top.tar.gz"}
+
+
 def test_attest(sampleproject: Path, id_token: oidc.IdentityToken) -> None:
     subprocess.run(["uv", "build"], cwd=sampleproject, check=True)
     dist_dir = sampleproject / "dist"
