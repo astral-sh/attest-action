@@ -88,13 +88,13 @@ jobs:
 
     needs: [build]
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: dist
 
-      - uses: astral-sh/attest-action@2c727738cea36d6c97dd85eb133ea0e0e8fe754b # v0.0.4
+      - uses: astral-sh/attest-action@f35111fb79f1e4f0150a1ee16cfd4399e3151bdb # v0.0.5
 
       - run: uv publish
 ```
@@ -107,7 +107,7 @@ If you have a custom path (or paths) to your distributions, you can specify them
 via the `paths` input as whitespace-separated values.
 
 ```yaml
-- uses: astral-sh/attest-action@2c727738cea36d6c97dd85eb133ea0e0e8fe754b # v0.0.4
+- uses: astral-sh/attest-action@f35111fb79f1e4f0150a1ee16cfd4399e3151bdb # v0.0.5
   with:
   paths: |
     custom-dist-dir/*
