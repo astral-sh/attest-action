@@ -16,7 +16,7 @@ permissions: {}
 jobs:
   test:
     name: Unit tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     permissions:
       contents: read
@@ -33,7 +33,7 @@ jobs:
 
   integration-invalid-paths-xfail:
     name: "Integration test (xfail): invalid paths input"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     permissions:
       contents: read
@@ -61,7 +61,7 @@ jobs:
 
   integration-insufficient-perms-xfail:
     name: "Integration test (xfail): insufficient permissions for attestations"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     permissions:
       contents: read
@@ -109,7 +109,7 @@ jobs:
 
   integration-testpypi:
     name: "Integration test: publish to TestPyPI with attestations"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     permissions:
       contents: read
