@@ -6,7 +6,7 @@ all:
 lint:
 	uv run --dev ruff format --check
 	uv run --dev ruff check
-	uv run --dev pyright
+	uv run --dev ty check
 
 .PHONY: fix
 fix:
