@@ -39,6 +39,7 @@ packages (to [pyx], [PyPI], or another compatible index).
 - [Inputs](#inputs)
     - [`paths`](#paths)
     - [`overwrite`](#overwrite)
+    - [`skip-setup-uv`](#skip-setup-uv)
 - [Outputs](#outputs)
 
 ## Usage
@@ -137,6 +138,17 @@ If `false` (the default), any existing publish attestations that *would* have
 been overwritten will instead cause the action to fail.
 
 If `true`, existing attestations will be overwritten.
+
+### `skip-setup-uv`
+
+**Default:** `false`
+
+Whether to skip setting up uv inside the action. This is useful if you have
+already set up uv in a previous step.
+
+> [!IMPORTANT]
+> If you set this to `true`, you **MUST** ensure that uv is available in the
+> `PATH` and that uv's version is `>=0.9.12`.
 
 ## Outputs
 
