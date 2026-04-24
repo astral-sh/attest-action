@@ -71,6 +71,10 @@ a publishing tool that supports PEP 740 attestations. Such tools include:
 > We recommend using `uv publish` with this action, as it does not require
 > any additional installation or configuration.
 
+> [!TIP]
+> This action will attempt to install `uv` if it is not already installed
+> and available on the `PATH`.
+
 ### Quickstart
 
 Add `astral-sh/attest-action` directly above your publishing step in your
