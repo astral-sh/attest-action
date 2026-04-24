@@ -152,7 +152,37 @@ jobs:
       # a version that includes attestation uploading support.
       - name: publish to TestPyPI
         working-directory: /tmp/astral-attest-action-test-pypi
-        run: uv publish --trusted-publishing=always --publish-url https://test.pypi.org/legacy/
+        run: uv publish --trusted-publishing=always --publish-url
+          https://test.pypi.org/legacy/
+
+  integration-skip-setup-uv-xfail:
+    name: "Integration test (xfail): skip setup-uv without uv in PATH"
+    runs-on: ubuntu-slim
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: attest with skip-setup-uv (expected to fail)
+        id: attest
+        uses: ./
+        with:
+          paths: "/tmp/fakepkg/dist/*"
+          skip-setup-uv: "true"
+        continue-on-error: true
+
+      - name: assert failure
+        run: |
+          if [ "${OUTCOME}" != "failure" ]; then
+            echo "Expected failure, got '${OUTCOME}'"
+            exit 1
+          fi
+        env:
+          OUTCOME: ${{ steps.attest.outcome }}
 
   all-tests-pass:
     name: All tests pass
@@ -163,6 +193,7 @@ jobs:
       - integration-invalid-paths-xfail
       - integration-insufficient-perms-xfail
       - integration-testpypi
+      - integration-skip-setup-uv-xfail
 
     steps:
       - name: All tests pass
