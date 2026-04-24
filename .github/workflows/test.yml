@@ -156,7 +156,7 @@ jobs:
           https://test.pypi.org/legacy/
 
   integration-skip-setup-uv-xfail:
-    name: "Integration test (xfail): skip setup-uv without uv in PATH"
+    name: "Integration test (xfail): skip-setup-uv without uv in PATH"
     runs-on: ubuntu-slim
 
     permissions:
