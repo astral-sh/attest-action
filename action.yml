@@ -43,7 +43,7 @@ runs:
 
     - name: generate attestations
       run: |
-        uv run --locked --project "${GITHUB_ACTION_PATH}" "${GITHUB_ACTION_PATH}/action.py"
+        uv run --locked --no-dev --project "${GITHUB_ACTION_PATH}" "${GITHUB_ACTION_PATH}/action.py"
       shell: bash
       env:
         ATTEST_ACTION_INPUT_PATHS: ${{ inputs.paths }}
