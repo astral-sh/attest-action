@@ -4,9 +4,9 @@ version = "0.0.6"
 description = "A GitHub Action that generates [PEP 740] publish attestations for your Python packages."
 readme = "README.md"
 dependencies = [
-    "prettytable>=3.17.0",
+    "prettytable>=3.18.0",
     "pypi-attestations>=0.0.28",
-    "sigstore>=4.1.0",
+    "sigstore>=4.3.0",
 ]
 requires-python = ">=3.10"
 classifiers = [
@@ -16,10 +16,10 @@ classifiers = [
 
 [dependency-groups]
 dev = [
-    "inline-snapshot>=0.32.6",
-    "pytest>=9.0.3",
-    "requests>=2.32.5",
-    "ruff>=0.15.11",
-    "ty>=0.0.31",
+    "inline-snapshot>=0.34.2",
+    "pytest>=9.1.1",
+    "requests>=2.34.2",
+    "ruff>=0.15.19",
+    "ty>=0.0.53",
 ]
 
