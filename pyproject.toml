@@ -23,3 +23,6 @@ dev = [
     "ty>=0.0.31",
 ]
 
+
+[tool.uv]
+exclude-newer = "P7D"
