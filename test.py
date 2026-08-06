@@ -1,12 +1,11 @@
 import logging
 import subprocess
-import time
 from pathlib import Path
 
 import pytest
 import requests
 from inline_snapshot import snapshot
-from pypi_attestations import Attestation, GitHubPublisher
+from pypi_attestations import Attestation, GooglePublisher
 from sigstore import oidc
 
 import action
@@ -29,41 +28,11 @@ def capture_summary(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
 
 @pytest.fixture(scope="session")
 def id_token() -> oidc.IdentityToken:
-    def _id_token() -> oidc.IdentityToken | None:
-        # GitHub loves to cache things it has no business caching.
-        result = subprocess.run(
-            [
-                "git",
-                "ls-remote",
-                "https://github.com/sigstore-conformance/extremely-dangerous-public-oidc-beacon",
-                "refs/heads/current-token",
-            ],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        ref = result.stdout.split()[0]
+    url = "https://storage.googleapis.com/sigstore-conformance-testing-token/untrusted-testing-token.txt"
+    resp = requests.get(url)
+    resp.raise_for_status()
 
-        resp = requests.get(
-            f"https://raw.githubusercontent.com/sigstore-conformance/extremely-dangerous-public-oidc-beacon/{ref}/oidc-token.txt",
-        )
-        resp.raise_for_status()
-        id_token = resp.text.strip()
-        try:
-            return oidc.IdentityToken(id_token)
-        except Exception:
-            return None
-
-    # Try up to 10 times to get a valid token, waiting 3 seconds between attempts.
-    for n in range(10):
-        token = _id_token()
-        if token is not None:
-            return token
-        else:
-            logger.warning(f"Waiting for valid OIDC identity token, try {n}...")
-        time.sleep(3)
-
-    raise RuntimeError("Failed to obtain OIDC identity token for tests")
+    return oidc.IdentityToken(resp.text.strip())
 
 
 @pytest.fixture
@@ -226,9 +195,8 @@ def test_attest_verify(
         assert attestation_path.exists()
 
         attestation = Attestation.model_validate_json(attestation_path.read_bytes())
-        identity = GitHubPublisher(
-            repository="sigstore-conformance/extremely-dangerous-public-oidc-beacon",
-            workflow="extremely-dangerous-oidc-beacon.yml",
+        identity = GooglePublisher(
+            email="untrusted-sa@sigstore-conformance.iam.gserviceaccount.com"
         )
 
         attestation.verify(

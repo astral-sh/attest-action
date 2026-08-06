@@ -45,7 +45,7 @@ jobs:
 
       - name: attest with invalid paths (expected to fail)
         id: attest
-        uses: ./
+        uses: $/
         with:
           paths: ""
         continue-on-error: true
@@ -93,7 +93,7 @@ jobs:
 
       - name: attest (expected to fail)
         id: attest
-        uses: ./
+        uses: $/
         with:
           paths: /tmp/fakepkg/dist/*
         continue-on-error: true
@@ -144,7 +144,7 @@ jobs:
         run: uv build
 
       - name: attest
-        uses: ./
+        uses: $/
         with:
           paths: /tmp/astral-attest-action-test-pypi/dist/*
 
