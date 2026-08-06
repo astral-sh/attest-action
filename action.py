@@ -2,7 +2,7 @@ import logging
 import os
 import shlex
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from glob import glob
 from pathlib import Path
 from typing import NoReturn
@@ -27,7 +27,7 @@ def _fatal(title: str, *, detail: str, tip: str | None = None) -> NoReturn:
 
     _summary(summary_message)
 
-    print("::error title={}::{}".format(title, detail))
+    print(f"::error title={title}::{detail}")
 
     sys.exit(1)
 
@@ -120,7 +120,7 @@ def _collect_dists(patterns: set[str]) -> list[tuple[Path, Distribution]]:
             dist = Distribution.from_file(file)
             dists.append((file, dist))
 
-        except Exception as _:
+        except Exception as _:  # noqa: BLE001
             logger.debug(f"skipping non-distribution file: {file}")
             continue
 
@@ -133,7 +133,7 @@ def _get_id_token() -> oidc.IdentityToken:
     """
     try:
         id_token = oidc.detect_credential()
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         _fatal(
             "Failed to obtain OIDC token",
             detail=f"Could not detect an ambient OIDC credential.\n\nCause: {exc}",
@@ -196,7 +196,7 @@ def _attest(
         for _, dist, attestation_path in dists_with_dests:
             attestation = Attestation.sign(signer, dist)
             attestation_path.write_text(attestation.model_dump_json())
-            attestations.append(((dist, attestation)))
+            attestations.append((dist, attestation))
 
     return attestations
 
@@ -224,7 +224,9 @@ def main() -> None:
         log_index_link = f"[{log_index}]({log_index_url})"
 
         integrated_time = int(log_entry["integratedTime"])
-        integrated_time_str = datetime.fromtimestamp(integrated_time).isoformat()
+        integrated_time_str = datetime.fromtimestamp(
+            integrated_time, tz=UTC
+        ).isoformat()
 
         table.add_row([f"`{dist.name}`", log_index_link, integrated_time_str])
     _summary(str(table))
