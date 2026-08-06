@@ -2,7 +2,7 @@ import logging
 import os
 import shlex
 import sys
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from glob import glob
 from pathlib import Path
 from typing import NoReturn
