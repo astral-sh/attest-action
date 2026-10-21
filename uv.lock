@@ -30,7 +30,7 @@ wheels = [
 
 [[package]]
 name = "attest-action"
-version = "0.0.6"
+version = "0.0.7"
 source = { virtual = "." }
 dependencies = [
     { name = "prettytable" },
@@ -51,7 +51,7 @@ dev = [
 requires-dist = [
     { name = "prettytable", specifier = ">=3.18.0" },
     { name = "pypi-attestations", specifier = ">=0.0.30" },
-    { name = "sigstore", specifier = ">=4.1.0" },
+    { name = "sigstore", specifier = ">=4.5.1" },
 ]
 
 [package.metadata.requires-dev]
