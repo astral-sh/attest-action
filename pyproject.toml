@@ -36,3 +36,9 @@ preview-features = ["build-dependency-hashes"]
 # compromised intermediate CA keys. Remove the override once the release
 # is at least seven days old.
 certifi = "2026-10-20T02:24:17Z"
+
+# Temporarily replace the rolling cutoff for sigstore with a fixed
+# timestamp to admit 4.5.1, recommended by the Python security team
+# after the eMudhra CA key compromise. Remove the override once the
+# release is at least seven days old.
+sigstore = "2026-10-20T15:12:51Z"
