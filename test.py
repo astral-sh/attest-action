@@ -1,11 +1,14 @@
 import logging
 import subprocess
 from pathlib import Path
+from time import time
+from unittest.mock import MagicMock, Mock, call
 
+import jwt
 import pytest
 import requests
 from inline_snapshot import snapshot
-from pypi_attestations import Attestation, GooglePublisher
+from pypi_attestations import Attestation, Distribution, GooglePublisher
 from sigstore import oidc
 
 import action
@@ -33,6 +36,13 @@ def id_token() -> oidc.IdentityToken:
     resp.raise_for_status()
 
     return oidc.IdentityToken(resp.text.strip())
+
+
+@pytest.fixture
+def mock_ambient_token(
+    monkeypatch: pytest.MonkeyPatch, id_token: oidc.IdentityToken
+) -> None:
+    monkeypatch.setattr(oidc, "detect_credential", lambda: str(id_token))
 
 
 @pytest.fixture
@@ -100,7 +110,8 @@ def test_unroll_files_recursive(tmp_path: Path) -> None:
     assert files == {root / "top.tar.gz"}
 
 
-def test_attest(sampleproject: Path, id_token: oidc.IdentityToken) -> None:
+@pytest.mark.usefixtures("mock_ambient_token")
+def test_attest(sampleproject: Path) -> None:
     subprocess.run(["uv", "build"], cwd=sampleproject, check=True)
     dist_dir = sampleproject / "dist"
 
@@ -109,21 +120,15 @@ def test_attest(sampleproject: Path, id_token: oidc.IdentityToken) -> None:
     dists = action._collect_dists(patterns)
     assert len(dists) == 2  # sdist and wheel
 
-    action._attest(
-        dists,
-        id_token,
-        overwrite=False,
-    )
+    action._attest(dists, overwrite=False)
 
     for dist_path, _ in dists:
         attestation_path = dist_path.with_name(f"{dist_path.name}.publish.attestation")
         assert attestation_path.exists()
 
 
-def test_attest_overwrite_fails(
-    sampleproject: Path,
-    id_token: oidc.IdentityToken,
-) -> None:
+@pytest.mark.usefixtures("mock_ambient_token")
+def test_attest_overwrite_fails(sampleproject: Path) -> None:
     subprocess.run(["uv", "build"], cwd=sampleproject, check=True)
     dist_dir = sampleproject / "dist"
 
@@ -132,24 +137,14 @@ def test_attest_overwrite_fails(
     dists = action._collect_dists(patterns)
     assert len(dists) == 2  # sdist and wheel
 
-    action._attest(
-        dists,
-        id_token,
-        overwrite=False,
-    )
+    action._attest(dists, overwrite=False)
 
     with pytest.raises(SystemExit):
-        action._attest(
-            dists,
-            id_token,
-            overwrite=False,
-        )
+        action._attest(dists, overwrite=False)
 
 
-def test_attest_overwrite_succeeds(
-    sampleproject: Path,
-    id_token: oidc.IdentityToken,
-) -> None:
+@pytest.mark.usefixtures("mock_ambient_token")
+def test_attest_overwrite_succeeds(sampleproject: Path) -> None:
     subprocess.run(["uv", "build"], cwd=sampleproject, check=True)
     dist_dir = sampleproject / "dist"
 
@@ -158,24 +153,14 @@ def test_attest_overwrite_succeeds(
     dists = action._collect_dists(patterns)
     assert len(dists) == 2  # sdist and wheel
 
-    action._attest(
-        dists,
-        id_token,
-        overwrite=False,
-    )
+    action._attest(dists, overwrite=False)
 
     # This should succeed without error.
-    action._attest(
-        dists,
-        id_token,
-        overwrite=True,
-    )
+    action._attest(dists, overwrite=True)
 
 
-def test_attest_verify(
-    sampleproject: Path,
-    id_token: oidc.IdentityToken,
-) -> None:
+@pytest.mark.usefixtures("mock_ambient_token")
+def test_attest_verify(sampleproject: Path) -> None:
     subprocess.run(["uv", "build"], cwd=sampleproject, check=True)
     dist_dir = sampleproject / "dist"
 
@@ -184,11 +169,7 @@ def test_attest_verify(
     dists = action._collect_dists(patterns)
     assert len(dists) == 2  # sdist and wheel
 
-    action._attest(
-        dists,
-        id_token,
-        overwrite=False,
-    )
+    action._attest(dists, overwrite=False)
 
     for dist_path, dist in dists:
         attestation_path = dist_path.with_name(f"{dist_path.name}.publish.attestation")
@@ -207,15 +188,10 @@ def test_attest_verify(
 
 
 def test_attest_no_dists(
-    id_token: oidc.IdentityToken,
     capture_summary: Path,
 ) -> None:
     with pytest.raises(SystemExit):
-        action._attest(
-            [],
-            id_token,
-            overwrite=False,
-        )
+        action._attest([], overwrite=False)
 
     assert capture_summary.read_text() == snapshot("""\
 ### ❌ Fatal: No distributions to attest
@@ -225,3 +201,58 @@ No valid Python distributions were collected from the specified paths.
 > [!TIP]
 > Ensure that the `paths` input points to valid distribution files.
 """)
+
+
+def test_attest_refreshes_signer(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    now = int(time())
+    expires_at = now + 300
+    raw_tokens = [
+        jwt.encode(
+            {
+                "aud": "sigstore",
+                "sub": "test",
+                "iss": "https://issuer.example",
+                "iat": now,
+                "exp": exp,
+            },
+            key="",
+            algorithm="none",
+        )
+        for exp in (expires_at, expires_at + 300)
+    ]
+    monkeypatch.setattr(oidc, "detect_credential", Mock(side_effect=raw_tokens))
+    monkeypatch.setattr(
+        action, "time", Mock(side_effect=[expires_at - 61, expires_at - 60])
+    )
+
+    context = Mock(spec=action.SigningContext)
+    initial_context, refreshed_context = MagicMock(), MagicMock()
+    initial_signer = initial_context.__enter__.return_value
+    refreshed_signer = refreshed_context.__enter__.return_value
+    context.signer.side_effect = [initial_context, refreshed_context]
+    monkeypatch.setattr(action.ClientTrustConfig, "production", Mock())
+    monkeypatch.setattr(action.SigningContext, "from_trust_config", lambda _: context)
+
+    attestation = Mock(spec=Attestation)
+    attestation.model_dump_json.return_value = "{}"
+    sign = Mock(return_value=attestation)
+    monkeypatch.setattr(Attestation, "sign", sign)
+
+    dists = []
+    for version in range(3):
+        path = tmp_path / f"sample-{version}.0.0.tar.gz"
+        dists.append((path, Distribution(name=path.name, digest="0" * 64)))
+
+    assert action._attest(dists) == [(dist, attestation) for _, dist in dists]
+    assert [
+        str(c.kwargs["identity_token"]) for c in context.signer.call_args_list
+    ] == raw_tokens
+    assert sign.call_args_list == [
+        call(initial_signer, dists[0][1]),
+        call(initial_signer, dists[1][1]),
+        call(refreshed_signer, dists[2][1]),
+    ]
+    for path, _ in dists:
+        assert Path(f"{path}.publish.attestation").read_text() == "{}"

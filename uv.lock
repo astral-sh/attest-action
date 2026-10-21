@@ -34,6 +34,7 @@ version = "0.0.6"
 source = { virtual = "." }
 dependencies = [
     { name = "prettytable" },
+    { name = "pyjwt" },
     { name = "pypi-attestations" },
     { name = "sigstore" },
 ]
@@ -50,6 +51,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "prettytable", specifier = ">=3.18.0" },
+    { name = "pyjwt", specifier = ">=2.10.1" },
     { name = "pypi-attestations", specifier = ">=0.0.30" },
     { name = "sigstore", specifier = ">=4.1.0" },
 ]
