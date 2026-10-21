@@ -98,7 +98,7 @@ jobs:
         with:
           name: dist
 
-      - uses: astral-sh/attest-action@f589a42a7efb6fe400b4f400de60b4bc90390027 # v0.0.6
+      - uses: astral-sh/attest-action@39b6ce43875c196a579e31635b11aa2a2036384a # v0.0.7
 
       - run: uv publish
 ```
@@ -111,7 +111,7 @@ If you have a custom path (or paths) to your distributions, you can specify them
 via the `paths` input as whitespace-separated values.
 
 ```yaml
-- uses: astral-sh/attest-action@f589a42a7efb6fe400b4f400de60b4bc90390027 # v0.0.6
+- uses: astral-sh/attest-action@39b6ce43875c196a579e31635b11aa2a2036384a # v0.0.7
   with:
   paths: |
     custom-dist-dir/*
