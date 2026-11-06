@@ -2,11 +2,14 @@ import logging
 import os
 import shlex
 import sys
+from collections import deque
 from datetime import UTC, datetime
 from glob import glob
 from pathlib import Path
+from time import time
 from typing import NoReturn
 
+import jwt
 from prettytable import PrettyTable, TableStyle
 from pypi_attestations import Attestation, Distribution
 from sigstore import oidc
@@ -14,6 +17,7 @@ from sigstore.models import ClientTrustConfig
 from sigstore.sign import SigningContext
 
 logger = logging.getLogger(__name__)
+_TOKEN_REFRESH_MARGIN_SECONDS = 60
 
 
 def _fatal(title: str, *, detail: str, tip: str | None = None) -> NoReturn:
@@ -127,9 +131,9 @@ def _collect_dists(patterns: set[str]) -> list[tuple[Path, Distribution]]:
     return dists
 
 
-def _get_id_token() -> oidc.IdentityToken:
+def _get_id_token() -> tuple[oidc.IdentityToken, int]:
     """
-    Obtain the ambient OIDC identity token.
+    Obtain the ambient OIDC identity token and its expiration timestamp.
     """
     try:
         id_token = oidc.detect_credential()
@@ -147,12 +151,15 @@ def _get_id_token() -> oidc.IdentityToken:
             tip="This action must be run within GitHub Actions.",
         )
 
-    return oidc.IdentityToken(raw_token=id_token)
+    token = oidc.IdentityToken(raw_token=id_token)
+    # Use the unverified expiration only to schedule refreshes; Fulcio
+    # verifies the token when issuing the signing certificate.
+    expires_at = int(jwt.decode(id_token, options={"verify_signature": False})["exp"])
+    return token, expires_at
 
 
 def _attest(
     dists: list[tuple[Path, Distribution]],
-    id_token: oidc.IdentityToken,
     overwrite: bool = False,
 ) -> list[tuple[Distribution, Attestation]]:
     """
@@ -172,7 +179,7 @@ def _attest(
     # Before setting up any signing state, precompute the paths we intend
     # to write attestations to (and fail if any already exist and overwrite
     # is disabled).
-    dists_with_dests: list[tuple[Path, Distribution, Path]] = []
+    pending: deque[tuple[Distribution, Path]] = deque()
     for file, dist in dists:
         parent = file.parent
         filename = file.name
@@ -186,17 +193,23 @@ def _attest(
                 tip="Set `overwrite: true` to overwrite existing attestation files.",
             )
 
-        dists_with_dests.append((file, dist, attestation_path))
+        pending.append((dist, attestation_path))
 
     trust = ClientTrustConfig.production()
     context = SigningContext.from_trust_config(trust)
 
     attestations = []
-    with context.signer(identity_token=id_token) as signer:
-        for _, dist, attestation_path in dists_with_dests:
-            attestation = Attestation.sign(signer, dist)
-            attestation_path.write_text(attestation.model_dump_json())
-            attestations.append((dist, attestation))
+    while pending:
+        id_token, expires_at = _get_id_token()
+        with context.signer(identity_token=id_token) as signer:
+            while pending:
+                dist, attestation_path = pending.popleft()
+                attestation = Attestation.sign(signer, dist)
+                attestation_path.write_text(attestation.model_dump_json())
+                attestations.append((dist, attestation))
+
+                if pending and time() >= expires_at - _TOKEN_REFRESH_MARGIN_SECONDS:
+                    break
 
     return attestations
 
@@ -206,11 +219,9 @@ def main() -> None:
 
     dists = _collect_dists(path_patterns)
 
-    id_token = _get_id_token()
-
     overwrite = _get_input("overwrite") == "true"
 
-    attestations = _attest(dists, id_token, overwrite=overwrite)
+    attestations = _attest(dists, overwrite=overwrite)
 
     _summary("## attest-action")
     table = PrettyTable()
